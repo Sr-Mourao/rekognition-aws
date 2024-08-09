@@ -1,0 +1,74 @@
+service: api-s3-bucket-rekognition
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  timeout: 15
+  stage: ${env:ENVIRONMENT, 'dev'}
+  environment: ${file(env.${opt:stage, self:provider.stage}.yml)}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - "s3:PutObject"
+            - "s3:GetObject"
+            - "s3:DeleteObject"
+          Resource: "arn:aws:s3:::${self:service}-public-photos-${sls:stage}/*"
+        - Effect: Allow
+          Action:
+            - "rekognition:*"
+          Resource: "*"
+
+resources:
+  Resources:
+    PhotoBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:service}-public-photos-${sls:stage}
+        WebsiteConfiguration:
+          IndexDocument: index.html
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: false
+          BlockPublicPolicy: false
+          IgnorePublicAcls: false
+          RestrictPublicBuckets: false
+    PhotoBucketAllowPublicReadPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref PhotoBucket
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - "s3:GetObject"
+              Resource:
+                - !Join ["/", [!GetAtt [PhotoBucket, Arn], "*"]]
+              Principal: "*"
+
+functions:
+  detect:
+    handler: src/handlers/rekognition/detectLabels.handler
+    events:
+      - httpApi:
+          path: /v1/detectLabels
+          method: post
+
+  compareFaces:
+    handler: src/handlers/rekognition/compareFaces.handler
+    events:
+      - httpApi:
+          path: /v1/compareFaces
+          method: post
+
+  save:
+    handler: src/handlers/s3/saveFile.handler
+    events:
+      - httpApi:
+          path: /v1/saveImage
+          method: post
+
+plugins:
+  - serverless-offline

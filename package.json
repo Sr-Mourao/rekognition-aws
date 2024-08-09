@@ -1,0 +1,16 @@
+{
+  "name": "api-s3-bucket-rekognition",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "serverless-offline": "^14.0.0"
+  },
+  "scripts": {
+    "dev": "serverless offline"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1671.0",
+    "lambda-multipart-parser": "^1.0.1"
+  }
+}
