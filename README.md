@@ -1,4 +1,4 @@
-# Analise de imagens e comparação de faces para reconhecimento facial
+# Análise de imagens e comparação de faces para reconhecimento facial
 
 
 development Felipe Mourão
